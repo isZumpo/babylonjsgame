@@ -1,0 +1,11 @@
+{
+  "name": "meteorgame",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "babylonjs": "^2.3.0",
+    "meteor-node-stubs": "^0.2.3"
+  }
+}
