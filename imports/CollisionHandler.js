@@ -1,3 +1,4 @@
+import Enemy from './Enemy';
 class CollisionHandler {
     constructor() {
         console.log('Collision detection activated!');
@@ -9,6 +10,25 @@ class CollisionHandler {
 
     getNearbyEntities(entityList) {
 
+    }
+
+    //For projectile:
+    collisionEntityCheck(entityMinMax, entityList, deltaTime) {
+        let isCollision = false;
+        let collisionEnemy;
+        entityList.forEach(function(entity) {
+            if(entity instanceof Enemy) {
+                if(this.intersect(entityMinMax, entity.getBoundingBox())) {
+                    isCollision = true;
+                    collisionEnemy = entity;
+                }
+            }
+        }, this);
+        if(isCollision) {
+            return {isCollision, enemy: collisionEnemy};
+        }else {
+            return {isCollision};
+        }
     }
 
     collisionEntitySolidCheck(entityMinMax, solidObjectList, deltaTime) {

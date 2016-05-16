@@ -1,4 +1,4 @@
-import BABYLON from './babylonmath';
+import BABYLON from './../node_modules/babylonjs/babylon';
 class Entity {
     constructor(mass, velocityVector, _id) {
         if(velocityVector == 0) {
@@ -9,6 +9,7 @@ class Entity {
         this.mass = mass;
         this.mesh = {};
         this._id = _id;
+        this.isAlive = true;
     }
 
     applyForce(force) {
@@ -35,17 +36,20 @@ class Entity {
 
         }
         if(Meteor.isClient) {
-            return this.mesh.getBoundingInfo().boundingBox;
+            return {min: this.mesh.getBoundingInfo().boundingBox.minimumWorld, max: this.mesh.getBoundingInfo().boundingBox.maximumWorld}
         }
-
-
     }
+
+    kill() {
+        this.mesh.dispose();
+        this.isAlive = false;
+    }
+
     update(fps, collisionHandler, solidObjectList) {
         var fpsTime = 1 / fps;
         let minMax = this.getBoundingBox();
         ////console.log(this);
         if(collisionHandler.collisionEntitySolidCheck(minMax, solidObjectList, fps)) {
-            /*
             let newVelocity = this.velocity;
             newVelocity.y = 0;
             newVelocity.x *= 0.95;
@@ -60,7 +64,6 @@ class Entity {
             }
             this.velocity = newVelocity;
 
-            */
 
             /*
             minMax.min.subtract(this.velocity.multiplyByFloats(fpsTime, fpsTime, fpsTime));

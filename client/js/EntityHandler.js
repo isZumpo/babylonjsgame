@@ -1,6 +1,8 @@
 import Player from './../../imports/Player';
+import Enemy from './../../imports/Enemy';
 import Projectile from './../../imports/Projectile';
 import SolidObject from './../../imports/SolidObject';
+import BABYLON from './../../node_modules/babylonjs/babylon';
 import CollisionHandler from './../../imports/CollisionHandler';
 class EntityHandler {
     constructor(gameId, scene, camera) {
@@ -21,6 +23,7 @@ class EntityHandler {
             RIGHT: 68,
             DOWN: 83,
             SPACE: 32,
+            FREE_CAMERA: 70,
 
             isDown: function(keyCode) {
                 return this._pressed[keyCode];
@@ -47,62 +50,8 @@ class EntityHandler {
         
         window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
         window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
-        /*function keyBoardpress(event) {
-            switch (event.keyCode) {
-                //Camera
-                case 65 : //'A'
-                    var radius = 1 / camera.radius;
-                    var directionVector = this.player.getDirectionVector();
-                    var matrix = BABYLON.Matrix.RotationAxis(BABYLON.Axis.Y, -Math.PI / 2);
-                    var v2 = BABYLON.Vector3.TransformCoordinates(directionVector, matrix);
-                    var force = this.player.mass*1.5;
-                    this.player.applyForce(v2.multiplyByFloats(force, force, force));
-                    break;
-                case 83 : //'S'
-                    var radius = 1 / camera.radius;
-                    var directionVector = this.player.getDirectionVector();
-                    var force = -100;
-                    this.player.applyForce(directionVector.multiplyByFloats(force, force, force));
-                    break;
-                case 68 : //'D'
-                    var radius = 1 / camera.radius;
-                    var directionVector = this.player.getDirectionVector();
-                    var matrix = BABYLON.Matrix.RotationAxis(BABYLON.Axis.Y, Math.PI / 2);
-                    var v2 = BABYLON.Vector3.TransformCoordinates(directionVector, matrix);
-                    var force = this.player.mass*1.5;
-                    this.player.applyForce(v2.multiplyByFloats(force, force, force));
-                    break;
-                case 87 : //'W'
-                    var radius = 1 / camera.radius;
-                    var directionVector = this.player.getDirectionVector();
-                    var force = this.player.mass*1.5; //http://www.schoolphysics.co.uk/age16-19/Medical%20physics/text/Walking_/index.html
-                    //
-                    //var dDirectionVector = new BABYLON.Vector2(directionVector.x, directionVector.z);
-                    //if(dDirectionVector.y < 0 ) {
-                    //    this.player.mesh.rotation = new BABYLON.Vector3(0, Math.acos(dDirectionVector.x/dDirectionVector.length()) - Math.PI / 2, 0);
-                    //}else {
-                    //    this.player.mesh.rotation = new BABYLON.Vector3(0, -Math.acos(dDirectionVector.x/dDirectionVector.length()) - Math.PI / 2, 0);
-                    //}
-                    //console.log(this.player.mesh.rotation.y / (2 * Math.PI) * 360);
-
-                    this.player.applyForce(directionVector.multiplyByFloats(force, force, force));
-                    break;
-                case 32: //Space
-                    var radius = 1 / camera.radius;
-                    var directionVector = this.player.getDirectionVector();
-                    var playerPosition = this.player.getPosition();
-                    var ballPosition = new BABYLON.Vector3(playerPosition.x,playerPosition.y,playerPosition.z);
-                    ballPosition.y += 2;
-                    var projectile = new Projectile(ballPosition, directionVector, scene, 'pizzaid');
-                    //this.addEntity(projectile); todo client side cration of projectiles?
-                    Meteor.call('addProjectile', projectile.velocity, projectile.getPosition());
-                    break;
-            }
-        }
-        window.addEventListener("keydown", keyBoardpress.bind(this));
-        */
         this.addEntity(this.player);
-        this.addSolidObject(new SolidObject(new BABYLON.Vector3(0, 0, 0), 30, 5, 30, scene));
+        this.addSolidObject(new SolidObject(new BABYLON.Vector3(0, 0, 0), 200, 5, 200, scene));
 
 
 
@@ -141,6 +90,10 @@ class EntityHandler {
             }
         });
 
+        //Add enemies:
+        this.addEntity(new Enemy(new BABYLON.Vector3(100,5,0), this.scene));
+
+
     }
     addEntity(entity) {
         this.entityList.push(entity);
@@ -149,7 +102,7 @@ class EntityHandler {
         this.solidObjectList.push(solidObject);
     }
     update(fps) {
-                //Camera
+        //Camera
         if(this.keyboard.isDown(this.keyboard.LEFT)) {
             var directionVector = this.player.getDirectionVector();
             var matrix = BABYLON.Matrix.RotationAxis(BABYLON.Axis.Y, -Math.PI / 2);
@@ -176,38 +129,55 @@ class EntityHandler {
             //
         }
         if(this.keyboard.hasBeenPressed(this.keyboard.SPACE)) {
-            var radius = 1 / this.camera.radius;
             var directionVector = this.player.getDirectionVector();
             var playerPosition = this.player.getPosition();
-            var ballPosition = new BABYLON.Vector3(playerPosition.x,playerPosition.y,playerPosition.z);
-            ballPosition.y += 2;
+            var ballPosition = new BABYLON.Vector3(playerPosition.x, this.player.mesh.getBoundingInfo().boundingBox.center.y, playerPosition.z);
             var projectile = new Projectile(ballPosition, directionVector, this.scene, 'pizzaid');
-            //this.addEntity(projectile); todo client side cration of projectiles?
-            Meteor.call('addProjectile', projectile.velocity, projectile.getPosition());
+            this.addEntity(projectile); //todo client side cration of projectiles?
+            //Meteor.call('addProjectile', projectile.velocity, projectile.getPosition());
         }
 
 
-        var radius = 1 / this.camera.radius;
-        var directionVector = this.player.getDirectionVector();
+        if(!this.keyboard.isDown(this.keyboard.FREE_CAMERA)) {
+            this.player.updateDirectionVector();
+            var directionVector = this.player.getDirectionVector();
 
-        var dDirectionVector = new BABYLON.Vector2(directionVector.x, directionVector.z);
-        if(dDirectionVector.y < 0 ) {
-            this.player.mesh.rotation = new BABYLON.Vector3(0, Math.acos(dDirectionVector.x/dDirectionVector.length()) - Math.PI / 2, 0);
+
+            var dDirectionVector = new BABYLON.Vector2(directionVector.x, directionVector.z);
+            if(dDirectionVector.y < 0 ) {
+                this.player.mesh.rotation = new BABYLON.Vector3(0, Math.acos(dDirectionVector.x/dDirectionVector.length()) - Math.PI / 2, 0);
+            }else {
+                this.player.mesh.rotation = new BABYLON.Vector3(0, -Math.acos(dDirectionVector.x/dDirectionVector.length()) - Math.PI / 2, 0);
+            }
         }else {
-            this.player.mesh.rotation = new BABYLON.Vector3(0, -Math.acos(dDirectionVector.x/dDirectionVector.length()) - Math.PI / 2, 0);
+            console.log(this.player.mesh.getBoundingInfo().boundingBox);
         }
-        //console.log(this.player.mesh.rotation.y / (2 * Math.PI) * 360);
-        //console.log(this.entityList);
+
         //-------------
         // TODO Implement game ticks, will make it work with servers
         //------------
+
+
+
         document.getElementById('velocity').innerHTML = this.player.velocity;
-        //console.log(deltaTime);
-        //this.player.update(fps, this.collisionHandler, this.solidObjectList);
-        this.entityList.forEach(function(entity) {
-            entity.applyAcceleration(new BABYLON.Vector3(0, -9.82 / fps, 0));
-            entity.update(fps, this.collisionHandler, this.solidObjectList);
-        }, this);
+
+
+        console.log(this.entityList.length);
+        for(var i = this.entityList.length - 1; i > -1; i--) {
+            var entity = this.entityList[i];
+            if(!entity.isAlive) {
+                this.entityList.splice(i, 1);
+            }else {
+                entity.applyAcceleration(new BABYLON.Vector3(0, -9.82 / fps, 0));
+                if(entity instanceof Enemy) {
+                    entity.update(fps, this.collisionHandler, this.solidObjectList, this.player);
+                }else if(entity instanceof Projectile) {
+                    entity.update(fps, this.collisionHandler, this.solidObjectList, this.entityList);
+                }else {
+                    entity.update(fps, this.collisionHandler, this.solidObjectList);
+                }
+            }
+        }
     }
 }
 
