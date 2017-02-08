@@ -4,49 +4,41 @@ class CollisionHandler {
         console.log('Collision detection activated!');
     }
 
-    checkForCollision(entity) {
-
-    }
-
-    getNearbyEntities(entityList) {
-
-    }
-
-    //For projectile:
+    //For projectile and player:
     collisionEntityCheck(entityMinMax, entityList, deltaTime) {
         let isCollision = false;
-        let collisionEnemy;
+        let collisionEnemyList = [];
         entityList.forEach(function(entity) {
             if(entity instanceof Enemy) {
                 if(this.intersect(entityMinMax, entity.getBoundingBox())) {
                     isCollision = true;
-                    collisionEnemy = entity;
+                    collisionEnemyList.push(entity);
                 }
             }
         }, this);
         if(isCollision) {
-            return {isCollision, enemy: collisionEnemy};
+            return {isCollision, enemyList: collisionEnemyList};
         }else {
             return {isCollision};
         }
     }
 
     collisionEntitySolidCheck(entityMinMax, solidObjectList, deltaTime) {
-        //let entityBoundingBox = entity.getBoundingBox();
-        //var entityPosition = entity.getPosition();
-        //var nextEntityPosition = entityPosition.add(entity.velocity.multiplyByFloats(deltaTime, deltaTime, deltaTime));
         let isCollision = false;
+        let collisionSolidObjectList = [];
         solidObjectList.forEach(function(solidObject) {
-            //let solidBoundingBox = ;
-            //let b = {min: solidBoundingBox.minimumWorld, max: solidBoundingBox.maximumWorld}
             let b = solidObject.getBoundingBox();
-            //let b = {min: entityBoundingBox.minimumWorld, max: entityBoundingBox.maximumWorld}
             if(this.intersect(entityMinMax, b)) {
                 isCollision = true;
+                collisionSolidObjectList.push(solidObject);
             }
         }, this);
 
-        return isCollision;
+        if(isCollision) {
+            return {isCollision, solidObjectList: collisionSolidObjectList};
+        }else {
+            return {isCollision};
+        }
     }
     intersect(a, b) {
         return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&
@@ -57,10 +49,6 @@ class CollisionHandler {
         return (point.x >= box.min.x && point.x <= box.max.x) &&
             (point.y >= box.min.y && point.y <= box.max.y) &&
             (point.z >= box.min.y && point.z <= box.max.z);
-    }
-
-    detectSide(velocity, position) {
-
     }
 
 }

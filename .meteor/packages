@@ -25,3 +25,4 @@ percolatestudio:synced-cron
 accounts-password
 accounts-ui
 iron:router
+session

@@ -6,8 +6,25 @@ import BABYLON from 'babylonjs';
 //https://youtu.be/Iu6nAXFm2Wo
 
 Template.game.onRendered(function() {
-    //console.log(OIMO);
     createScene();
+});
+
+Template.game.helpers({
+    health: function () {
+        let health = [];
+        for(var i = 0; i < Session.get('health'); i++) {
+            health.push({position: i*50});
+        }
+        return health;
+    },
+    isDead: function () {
+        if(Session.get('health') <= 0) {
+            return true;
+        }
+    },
+    toadKills: function() {
+        return Session.get('toadKills');
+    }
 });
 
 var canvas, engine, scene, camera = 0;
@@ -15,7 +32,7 @@ var entityHandler;
 
 
 function createScene() {
-    console.log('test!');
+    Session.set('toadKills', 0);
     if(!Meteor.userId) {
         console.log('Not logged in!');
     }
@@ -74,7 +91,6 @@ function createScene() {
     skybox.material = skyboxMaterial;
 
 
-    // The function ImportMesh will import our custom model in the scene given in parameter
 
 
 };
